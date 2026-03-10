@@ -68,7 +68,7 @@ export const translations = {
     tagline: 'ِإكتشف بياناتك في ثواني', // "Discover your data in seconds"
 
     // Upload section
-    uploadTitle: 'تحميل مجموعة البيانات',
+    uploadTitle: 'أرفق مجموعة البيانات',
     dragDrop: 'اسحب ملف CSV هنا',
     orClick: 'أو انقر للتحديد',
     fileType: 'ملفات CSV فقط',

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "BAINAH | بيّنة — Dataset Insight Generator",
+  title: "BAYYNAH | بيّنة — Dataset Insight Generator",
   description:
     "Upload a CSV and instantly get statistical analysis, visualisations, and insights.",
   icons: {
