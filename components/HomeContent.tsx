@@ -6,6 +6,7 @@ import DatasetSummary from "@/components/DatasetSummary";
 import ChartsPanel from "@/components/ChartsPanel";
 import InsightsPanel from "@/components/InsightsPanel";
 import AnomalyTable from "@/components/AnomalyTable";
+import GlossaryPanel from "@/components/GlossaryPanel";
 import { ParsedDataset } from "@/types/dataset";
 
 interface HomeContentProps {
@@ -66,6 +67,7 @@ export default function HomeContent({
             <ChartsPanel dataset={dataset} />
             <InsightsPanel insights={dataset.insights} />
             <AnomalyTable anomalies={dataset.anomalies} />
+            <GlossaryPanel />
           </>
         )}
 
