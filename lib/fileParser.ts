@@ -32,13 +32,13 @@ function parseNumericString(value: string): number | null {
   }
 
   working = working
-    .replace(/^[\p{L}]{2,4}\s*/u, '')
-    .replace(/\s*[\p{L}]{2,4}$/u, '')
-    .replace(/^[\p{Sc}]+/gu, '')
-    .replace(/[\p{Sc}]+$/gu, '')
+    .replace(/^[A-Za-z]{2,4}\s*/, '')
+    .replace(/\s*[A-Za-z]{2,4}$/, '')
+    .replace(/^[\$£¥€₹₩₺₽₫₦₱₪₴₭₲₵₸₼₡₮₠₢₣₤₧₯₰﷼]+/, '')
+    .replace(/[\$£¥€₹₩₺₽₫₦₱₪₴₭₲₵₸₼₡₮₠₢₣₤₧₯₰﷼]+$/, '')
     .trim();
 
-  if (working === '' || /\p{L}/u.test(working)) return null;
+  if (working === '' || /[A-Za-z\u0600-\u06FF]/.test(working)) return null;
 
   if (working.includes(',') && working.includes('.')) {
     working = working.replace(/,/g, '');
@@ -94,7 +94,7 @@ function normalizeHeaderValue(value: unknown): string {
   if (value === null || value === undefined) return '';
   let text = String(value);
   text = text.replace(/\s+/g, ' ').trim();
-  text = text.replace(/[^\p{L}\p{N} ]+/gu, '').trim();
+  text = text.replace(/[^A-Za-z0-9\u0600-\u06FF ]+/g, '').trim();
   return text;
 }
 
