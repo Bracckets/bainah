@@ -1,0 +1,485 @@
+/* ─── BAINAH Global Styles ───────────────────────────────────────────────────
+   Aesthetic: Refined dark editorial — Arabic scholarly meets data terminal
+   Fonts: DM Serif Display (display) + IBM Plex Mono (mono/body) + The Year of Handicrafts (Arabic)
+*/
+
+@font-face {
+  font-family: "The Year of Handicrafts";
+  src: url("/TheYearofHandicrafts-Bold.otf") format("opentype");
+  font-weight: bold;
+  font-display: swap;
+}
+
+@import url("https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap");
+
+/* ── Design tokens ──────────────────────────────────────────────────────────*/
+:root {
+  --bg: #0a0a0a;
+  --surface: #1a1a1a;
+  --surface2: #2a2a2a;
+  --border: rgba(255, 255, 255, 0.1);
+  --accent: #1db954; /* bright green */
+  --accent2: #1db954; /* bright green */
+  --warn: #ff4444;
+  --muted: #808080;
+  --text: #ffffff;
+  --text2: #b0b0b0;
+
+  --tag-numeric: rgba(29, 185, 84, 0.25);
+  --tag-cat: rgb(59, 10, 82);
+  --tag-date: rgba(29, 102, 185, 0.25);
+  --tag-text: rgba(176, 176, 176, 0.2);
+
+  --font-display: "DM Serif Display", serif;
+  --font-mono: "IBM Plex Mono", monospace;
+  --font-ar: "The Year of Handicrafts", serif;
+  --font-ar-header: "The Year of Handicrafts", serif;
+
+  --radius: 8px;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* ── Reset ──────────────────────────────────────────────────────────────────*/
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html {
+  scroll-behavior: smooth;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── App shell ──────────────────────────────────────────────────────────────*/
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────────*/
+.header {
+  position: relative;
+  overflow: hidden;
+  padding: 3rem 2rem 2.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  direction: rtl;
+  text-align: right;
+}
+.header-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(201, 169, 110, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201, 169, 110, 0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+.header-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.4rem;
+}
+.logo-img-header {
+  width: 8rem;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.tagline {
+  color: var(--muted);
+  font-size: 1rem;
+  font-family: var(--font-ar);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* ── Main ───────────────────────────────────────────────────────────────────*/
+.main {
+  flex: 1;
+  max-width: 960px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ── Card ───────────────────────────────────────────────────────────────────*/
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.75rem;
+  box-shadow: var(--shadow);
+  animation: fadeUp 0.35s ease both;
+}
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Section headings ───────────────────────────────────────────────────────*/
+.section-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--text);
+  margin-bottom: 0.25rem;
+  letter-spacing: 0.02em;
+}
+.section-title::after {
+  content: "";
+  display: block;
+  width: 2rem;
+  height: 2px;
+  background: var(--accent);
+  margin-top: 0.4rem;
+  margin-bottom: 1rem;
+  border-radius: 2px;
+}
+.sub-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 1.5rem 0 0.75rem;
+}
+.section-sub {
+  color: var(--text2);
+  font-size: 12px;
+  margin-bottom: 1rem;
+}
+
+/* ── Upload zone ────────────────────────────────────────────────────────────*/
+.upload-section {
+  text-align: left;
+}
+.upload-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 2.5rem 1.5rem;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+  background: var(--surface2);
+}
+.upload-zone:hover {
+  border-color: var(--accent);
+  background: rgba(201, 169, 110, 0.04);
+}
+.upload-icon {
+  color: var(--accent);
+  opacity: 0.7;
+}
+.upload-title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--text);
+}
+.upload-sub {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.loading-bar {
+  height: 2px;
+  background: var(--surface2);
+  border-radius: 2px;
+  margin-top: 1rem;
+  overflow: hidden;
+}
+.loading-progress {
+  height: 100%;
+  width: 60%;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  animation: shimmer 1.2s infinite;
+}
+@keyframes shimmer {
+  0% {
+    transform: translateX(-150%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}
+
+.error-msg {
+  color: var(--warn);
+  font-size: 12px;
+  margin-top: 0.75rem;
+}
+.success-msg {
+  color: #6dbc82;
+  font-size: 12px;
+  margin-top: 0.75rem;
+}
+
+/* ── Stat grid ──────────────────────────────────────────────────────────────*/
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.stat-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.stat-value {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  color: var(--accent);
+  line-height: 1;
+}
+.stat-label {
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* ── Tables ─────────────────────────────────────────────────────────────────*/
+.col-table-wrap {
+  overflow-x: auto;
+}
+.col-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.col-table th {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.col-table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--text2);
+}
+.col-table tr:last-child td {
+  border-bottom: none;
+}
+.col-table tr:hover td {
+  background: var(--surface2);
+}
+.col-name {
+  color: var(--text) !important;
+  font-weight: 500;
+}
+
+.type-tag {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* ── Chart grid ─────────────────────────────────────────────────────────────*/
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+.chart-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+.chart-label {
+  font-size: 11px;
+  color: var(--text);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chart-meta {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 0.4rem;
+}
+
+/* ── Heatmap ────────────────────────────────────────────────────────────────*/
+.heatmap {
+  border-collapse: collapse;
+  font-size: 11px;
+}
+.hm-header {
+  padding: 0.3rem 0.5rem;
+  color: var(--muted);
+  font-size: 10px;
+  white-space: nowrap;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transform: rotate(-30deg);
+  transform-origin: bottom left;
+  text-align: left;
+  height: 60px;
+  vertical-align: bottom;
+}
+.hm-row-label {
+  padding: 0.3rem 0.75rem 0.3rem 0;
+  color: var(--muted);
+  font-size: 10px;
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+}
+.hm-cell {
+  padding: 0.35rem 0.5rem;
+  text-align: center;
+  font-size: 10px;
+  color: var(--bg);
+  font-weight: 600;
+  min-width: 52px;
+  border-radius: 3px;
+}
+
+/* ── Insights ───────────────────────────────────────────────────────────────*/
+.insights-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.insight-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  background: var(--surface2);
+  border-left: 3px solid var(--muted);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  transition: border-color 0.2s;
+}
+.insight-icon {
+  font-size: 0.9rem;
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+}
+.insight-title {
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.25rem;
+  font-size: 12.5px;
+}
+.insight-body {
+  color: var(--text2);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+/* ── Empty states ───────────────────────────────────────────────────────────*/
+.empty-state {
+  color: var(--muted);
+  font-size: 12px;
+  padding: 0.5rem 0;
+}
+
+.empty-hero {
+  text-align: center;
+  padding: 4rem 2rem;
+  opacity: 0.7;
+}
+.empty-hero-text {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--text2);
+  margin-bottom: 2rem;
+  font-style: italic;
+}
+.feature-list {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  text-align: left;
+}
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 12px;
+  color: var(--text2);
+}
+.feature-icon {
+  color: var(--accent);
+  font-size: 0.85rem;
+}
+
+/* ── Footer ─────────────────────────────────────────────────────────────────*/
+.footer {
+  text-align: center;
+  padding: 1.25rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────────────────*/
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--surface2);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
