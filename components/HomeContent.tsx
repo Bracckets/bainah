@@ -35,7 +35,7 @@ export default function HomeContent({
               className="logo-img-header"
             />
           </div>
-          <p className="tagline">اكتشف بياناتك في ثواني</p>
+          <p className="tagline">اسكتشف بياناتك في ثواني</p>
         </div>
         <div className="header-grid" aria-hidden="true" />
       </header>
@@ -94,7 +94,7 @@ export default function HomeContent({
 
       <footer className="footer">
         <p>
-          BAINAH · بيّنة · AI Dataset Insight Generator · Built with Next.js &
+          BAYYNAH · بيّنة · Dataset Insight Generator · Built with Next.js &
           Recharts
         </p>
       </footer>

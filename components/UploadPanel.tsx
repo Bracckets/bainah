@@ -13,7 +13,8 @@ export default function UploadPanel({ onFile, isLoading }: Props) {
   const [dragging, setDragging] = useState(false);
 
   const handleFile = (file: File) => {
-    if (file.name.endsWith('.csv')) onFile(file);
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (ext === 'csv' || ext === 'xlsx' || ext === 'xls') onFile(file);
   };
 
   const onDrop = (e: React.DragEvent) => {
@@ -30,7 +31,7 @@ export default function UploadPanel({ onFile, isLoading }: Props) {
       onDrop={onDrop}
       onClick={() => !isLoading && inputRef.current?.click()}
     >
-      <input ref={inputRef} type="file" accept=".csv" style={{ display: 'none' }}
+      <input ref={inputRef} type="file" accept=".csv,.xlsx,.xls" style={{ display: 'none' }}
         onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
       <div className="upload-icon">
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -39,7 +40,7 @@ export default function UploadPanel({ onFile, isLoading }: Props) {
           <line x1="12" y1="3" x2="12" y2="15"/>
         </svg>
       </div>
-      <p className="upload-title">{isLoading ? 'Analysing dataset…' : 'Drop your CSV here'}</p>
+      <p className="upload-title">{isLoading ? 'Analysing dataset…' : 'Drop your CSV or Excel file here'}</p>
       <p className="upload-sub">or click to browse · up to 10 MB</p>
     </div>
   );

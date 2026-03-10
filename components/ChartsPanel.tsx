@@ -106,7 +106,8 @@ export default function ChartsPanel({ dataset }: Props) {
                 .slice(0, 300);
               return (
                 <div key={`${colA}-${colB}`} className="chart-card">
-                  <p className="chart-label">{colA} vs {colB} <span style={{ color: 'var(--accent)' }}>(r={r.toFixed(2)})</span></p>
+                  <p className="chart-label" style={{ whiteSpace: 'normal', overflow: 'visible', textOverflow: 'unset' }}>{colA} vs {colB}</p>
+                  <p style={{ fontSize: '11px', color: 'var(--accent)', marginTop: '-0.35rem', marginBottom: '0.5rem', fontWeight: 500 }}>r = {r.toFixed(2)}</p>
                   <ResponsiveContainer width="100%" height={180}>
                     <ScatterChart margin={{ top: 8, right: 8, bottom: 8, left: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
