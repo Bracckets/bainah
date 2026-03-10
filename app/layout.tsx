@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "BAYYNAH | بيّنة — Dataset Insight Generator",
     description:
-      "Upload a CSV and instantly get statistical analysis, visualisations, and AI-generated insights.",
+      "Upload a CSV and instantly get statistical analysis, visualisations, and generated insights.",
     url: "https://bayynah.vercel.app",
     siteName: "BAYYNAH",
     images: [
