@@ -25,14 +25,22 @@ function detectType(values: string[]): ColumnType {
   const nonEmpty = values.filter((v) => !isMissing(v));
   if (nonEmpty.length === 0) return 'text';
 
+  const uniqueValues = new Set(nonEmpty.map((v) => v.trim()));
+
+  // Binary columns (0/1, true/false, yes/no) are categorical regardless of numeric-ness
+  if (uniqueValues.size <= 2) return 'categorical';
+
   const numericCount = nonEmpty.filter(isNumericValue).length;
-  if (numericCount / nonEmpty.length >= 0.85) return 'numeric';
+  if (numericCount / nonEmpty.length >= 0.85) {
+    // Low-cardinality numeric-looking columns (<=10 unique values) are flags/codes → categorical
+    if (uniqueValues.size <= 10) return 'categorical';
+    return 'numeric';
+  }
 
   const dateCount = nonEmpty.filter(isDatetimeValue).length;
   if (dateCount / nonEmpty.length >= 0.85) return 'datetime';
 
-  const uniqueCount = new Set(nonEmpty.map((v) => v.toLowerCase().trim())).size;
-  if (uniqueCount <= Math.max(20, nonEmpty.length * 0.15)) return 'categorical';
+  if (uniqueValues.size <= Math.max(20, nonEmpty.length * 0.15)) return 'categorical';
 
   return 'text';
 }

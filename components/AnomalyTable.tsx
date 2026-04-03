@@ -1,71 +1,135 @@
-'use client';
-// ─── AnomalyTable ─────────────────────────────────────────────────────────────
-// Shows anomalies detected by IQR (Tukey fences, robust) and Z-score methods.
+"use client";
 
-import { AnomalyRow } from '@/types/dataset';
+import { AnomalyRow } from "@/types/dataset";
 
-interface Props { anomalies: AnomalyRow[] }
+interface Props {
+  anomalies: AnomalyRow[];
+}
 
 export default function AnomalyTable({ anomalies }: Props) {
   if (anomalies.length === 0) {
     return (
-      <section className="card">
-        <h2 className="section-title">Anomalies Detected</h2>
-        <p className="empty-state">✓ No outliers detected by IQR (1.5×IQR) or Z-score (|z| &gt; 3) methods.</p>
+      <section className="workspace-panel">
+        <div className="workspace-panel-head">
+          <div>
+            <p className="panel-kicker">Anomalies</p>
+            <h2 className="panel-title">No outliers flagged</h2>
+          </div>
+          <p className="panel-note">
+            This dataset did not trigger the current IQR and Z-score rules.
+          </p>
+        </div>
+        <p className="empty-state">
+          No rows crossed the current anomaly thresholds.
+        </p>
       </section>
     );
   }
 
   return (
-    <section className="card">
-      <h2 className="section-title">Anomalies Detected</h2>
+    <section className="workspace-panel">
+      <div className="workspace-panel-head">
+        <div>
+          <p className="panel-kicker">Anomalies</p>
+          <h2 className="panel-title">Review flagged rows</h2>
+        </div>
+        <p className="panel-note">
+          {anomalies.length} rows or values were flagged by at least one of the
+          current anomaly checks.
+        </p>
+      </div>
+
       <p className="section-sub">
-        {anomalies.length} outlier{anomalies.length !== 1 ? 's' : ''} found.
-        {' '}<strong>IQR method</strong> (Tukey 1.5×IQR fences) is distribution-free and robust to skew.
-        {' '}<strong>Z-score</strong> (|z| &gt; 3) assumes approximate normality — treat with caution on skewed columns.
+        IQR is robust to skew. Z-score is useful for roughly normal numeric
+        columns, but treat it carefully on long-tailed data.
       </p>
-      <div className="col-table-wrap">
+
+      <div className="anomaly-mobile-list">
+        {anomalies.slice(0, 50).map((anomaly, index) => (
+          <div key={`${anomaly.column}-${anomaly.rowIndex}-${index}`} className="anomaly-mobile-card">
+            <div className="anomaly-mobile-head">
+              <p className="column-mobile-name">{anomaly.column}</p>
+              <span className="type-tag">
+                Row {anomaly.rowIndex + 1}
+              </span>
+            </div>
+            <p className="anomaly-mobile-value">
+              Value {anomaly.value.toLocaleString()}
+            </p>
+            <p className="anomaly-mobile-meta">
+              Z-score {anomaly.zScore > 0 ? "+" : ""}
+              {anomaly.zScore.toFixed(3)}
+            </p>
+            <div className="anomaly-tags">
+              <span
+                className="type-tag"
+                style={{
+                  background: anomaly.iqrOutlier
+                    ? "rgba(208, 111, 100, 0.18)"
+                    : "var(--surface-subtle)",
+                  color: anomaly.iqrOutlier ? "var(--warn)" : "var(--muted)",
+                }}
+              >
+                {anomaly.iqrOutlier ? "IQR outlier" : "Not IQR"}
+              </span>
+              <span
+                className="type-tag"
+                style={{
+                  background:
+                    Math.abs(anomaly.zScore) > 3
+                      ? "rgba(215, 194, 135, 0.18)"
+                      : "var(--surface-subtle)",
+                  color:
+                    Math.abs(anomaly.zScore) > 3
+                      ? "var(--accent)"
+                      : "var(--muted)",
+                }}
+              >
+                {Math.abs(anomaly.zScore) > 3 ? "Z outlier" : "Not Z"}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="col-table-wrap column-table-desktop">
         <table className="col-table">
           <thead>
             <tr>
-              <th>Row #</th>
+              <th>Row</th>
               <th>Column</th>
               <th>Value</th>
-              <th>Z-Score</th>
-              <th>IQR Outlier</th>
-              <th>Z Outlier</th>
+              <th>Z-score</th>
+              <th>IQR flag</th>
+              <th>Z flag</th>
             </tr>
           </thead>
           <tbody>
-            {anomalies.slice(0, 50).map((a, i) => {
-              const absZ = Math.abs(a.zScore);
-              const zColor = absZ > 5 ? 'var(--warn)' : absZ > 4 ? '#f59e0b' : 'var(--muted)';
+            {anomalies.slice(0, 50).map((anomaly, index) => {
+              const absZ = Math.abs(anomaly.zScore);
+              const zColor =
+                absZ > 5 ? "var(--warn)" : absZ > 4 ? "#D7C287" : "var(--muted)";
+
               return (
-                <tr key={i}>
-                  <td>{a.rowIndex + 1}</td>
-                  <td className="col-name">{a.column}</td>
-                  <td>{a.value.toLocaleString()}</td>
-                  <td style={{ color: zColor, fontFamily: 'var(--font-mono)' }}>
-                    {a.zScore > 0 ? '+' : ''}{a.zScore.toFixed(3)}
+                <tr key={`${anomaly.column}-${anomaly.rowIndex}-${index}`}>
+                  <td>{anomaly.rowIndex + 1}</td>
+                  <td className="col-name">{anomaly.column}</td>
+                  <td>{anomaly.value.toLocaleString()}</td>
+                  <td style={{ color: zColor, fontFamily: "var(--font-mono)" }}>
+                    {anomaly.zScore > 0 ? "+" : ""}
+                    {anomaly.zScore.toFixed(3)}
                   </td>
-                  <td>
-                    {a.iqrOutlier
-                      ? <span className="type-tag" style={{ background: 'rgba(224,92,92,0.25)', color: 'var(--warn)' }}>yes</span>
-                      : <span className="type-tag" style={{ background: 'var(--surface2)' }}>no</span>}
-                  </td>
-                  <td>
-                    {Math.abs(a.zScore) > 3
-                      ? <span className="type-tag" style={{ background: 'rgba(245,158,11,0.2)', color: '#f59e0b' }}>yes</span>
-                      : <span className="type-tag" style={{ background: 'var(--surface2)' }}>no</span>}
-                  </td>
+                  <td>{anomaly.iqrOutlier ? "Yes" : "No"}</td>
+                  <td>{Math.abs(anomaly.zScore) > 3 ? "Yes" : "No"}</td>
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
+
       {anomalies.length > 50 && (
-        <p className="section-sub" style={{ marginTop: 8 }}>Showing first 50 of {anomalies.length} anomalies.</p>
+        <p className="section-sub">Showing the first 50 of {anomalies.length} flagged rows.</p>
       )}
     </section>
   );

@@ -12,14 +12,14 @@ export interface ColumnMeta {
 export interface NumericStats {
   mean: number;
   median: number;
-  std: number;        // sample std dev (n-1) — Bessel's correction
+  std: number;
   min: number;
   max: number;
-  q1: number;         // 25th percentile
-  q3: number;         // 75th percentile
-  iqr: number;        // interquartile range
-  skewness: number;   // moment-based skewness
-  kurtosis: number;   // excess kurtosis (normal = 0)
+  q1: number;
+  q3: number;
+  iqr: number;
+  skewness: number;
+  kurtosis: number;
   histogram: { bin: string; count: number }[];
 }
 
@@ -27,7 +27,7 @@ export interface CategoricalStats {
   frequencies: { value: string; count: number }[];
   mostCommon: string;
   mostCommonPct: number;
-  entropy: number;    // Shannon entropy — measures category diversity
+  entropy: number;
 }
 
 export type ColumnStats = NumericStats | CategoricalStats;
@@ -36,9 +36,9 @@ export interface CorrelationResult {
   colA: string;
   colB: string;
   r: number;
-  pValue: number;     // two-tailed p-value for H0: r = 0
-  n: number;          // sample size used
-  significant: boolean; // p < 0.05
+  pValue: number;
+  n: number;
+  significant: boolean;
 }
 
 export interface Insight {
@@ -54,7 +54,7 @@ export interface AnomalyRow {
   column: string;
   value: number;
   zScore: number;
-  iqrOutlier: boolean; // true if also flagged by IQR method
+  iqrOutlier: boolean;
 }
 
 export interface ParsedDataset {
@@ -67,3 +67,47 @@ export interface ParsedDataset {
   insights: Insight[];
   anomalies: AnomalyRow[];
 }
+
+// ─── Analysis Wizard Types ────────────────────────────────────────────────────
+
+export type WizardMode = 'understand' | 'drivers' | 'predict';
+
+export interface DriverResult {
+  column: string;
+  /** Pearson |r| against the target */
+  importance: number;
+  direction: 'positive' | 'negative';
+  r: number;
+  pValue: number;
+  significant: boolean;
+}
+
+export interface DriversAnalysis {
+  target: string;
+  drivers: DriverResult[];
+  summary: string;
+}
+
+export interface PredictionRow {
+  rowIndex: number;
+  actual: number;
+  predicted: number;
+  error: number;
+}
+
+export interface PredictionResult {
+  target: string;
+  taskType: 'regression' | 'classification';
+  modelName: string;
+  /** Regression metrics */
+  rmse?: number;
+  mae?: number;
+  r2?: number;
+  /** Classification metrics */
+  accuracy?: number;
+  /** Feature importances (correlation-based proxy) */
+  featureImportance: { feature: string; importance: number }[];
+  predictions: PredictionRow[];
+  summary: string;
+}
+

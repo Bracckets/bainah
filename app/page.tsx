@@ -1,7 +1,6 @@
 "use client";
-// ─── page.tsx — BAINAH | بيّنة ────────────────────────────────────────────────
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import HomeContent from "@/components/HomeContent";
 import SheetPicker from "@/components/SheetPicker";
 import { parseFile } from "@/lib/fileParser";
@@ -9,27 +8,74 @@ import { classifyColumns } from "@/lib/columnClassifier";
 import { computeStats } from "@/lib/statisticsEngine";
 import { computeCorrelations } from "@/lib/correlationEngine";
 import { generateInsights } from "@/lib/insightGenerator";
+import { generateAiInsights } from "@/lib/aiInsightGenerator";
 import { detectAnomalies } from "@/lib/anomalyDetector";
+import { ApiKeyProvider, useApiKey } from "@/lib/ApiKeyContext";
 import { ParsedDataset } from "@/types/dataset";
 
-export default function Home() {
+function PageInner() {
+  const { apiKey, provider, providerConfig } = useApiKey();
   const [dataset, setDataset] = useState<ParsedDataset | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filename, setFilename] = useState("");
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [sheetNames, setSheetNames] = useState<string[]>([]);
+  const [insightSource, setInsightSource] = useState<
+    "ai" | "rules" | "loading" | null
+  >(null);
+  const aiRunRef = useRef(0);
+
+  useEffect(() => {
+    if (!dataset) return;
+
+    const rulesOnly = generateInsights(
+      dataset.columns,
+      dataset.stats,
+      dataset.correlations
+    );
+
+    if (!apiKey) {
+      setDataset((prev) => (prev ? { ...prev, insights: rulesOnly } : prev));
+      setInsightSource("rules");
+      return;
+    }
+
+    const runId = ++aiRunRef.current;
+    setInsightSource("loading");
+
+    generateAiInsights(
+      provider,
+      providerConfig,
+      apiKey,
+      dataset.columns,
+      dataset.stats,
+      dataset.correlations,
+      dataset.rowCount
+    ).then(({ insights, source }) => {
+      if (aiRunRef.current !== runId) return;
+      setDataset((prev) => (prev ? { ...prev, insights } : prev));
+      setInsightSource(source);
+    });
+  }, [
+    apiKey,
+    provider,
+    providerConfig,
+    dataset?.rowCount,
+    dataset?.colCount,
+    filename,
+  ]);
 
   const processFile = async (file: File, sheetName?: string) => {
     setLoading(true);
     setError(null);
     setDataset(null);
+    setInsightSource(null);
     setFilename(file.name);
 
     try {
       const result = await parseFile(file, sheetName);
 
-      // If sheets available, show sheet picker
       if (result.type === "sheets") {
         setPendingFile(file);
         setSheetNames(result.names);
@@ -37,29 +83,33 @@ export default function Home() {
         return;
       }
 
-      // Process rows
       const rows = result.data;
-      if (rows.length === 0) throw new Error("The file appears to be empty.");
+      if (rows.length === 0) {
+        throw new Error("The file appears to be empty.");
+      }
 
       const columnNames = Object.keys(rows[0]);
       const columns = classifyColumns(rows, columnNames);
       const stats = computeStats(rows, columns);
       const correlations = computeCorrelations(rows, columns);
-      const insights = generateInsights(columns, stats, correlations);
+      const rulesOnly = generateInsights(columns, stats, correlations);
       const anomalies = detectAnomalies(rows, columns);
 
-      setDataset({
+      const initialDataset: ParsedDataset = {
         rows,
         columns,
         rowCount: rows.length,
         colCount: columnNames.length,
         stats,
         correlations,
-        insights,
+        insights: rulesOnly,
         anomalies,
-      });
+      };
+
+      setDataset(initialDataset);
       setPendingFile(null);
       setSheetNames([]);
+      setInsightSource("rules");
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Unknown error occurred.");
       setPendingFile(null);
@@ -74,10 +124,9 @@ export default function Home() {
   };
 
   const handleSheetSelect = (sheetName: string) => {
-    if (pendingFile) {
-      setSheetNames([]);
-      processFile(pendingFile, sheetName);
-    }
+    if (!pendingFile) return;
+    setSheetNames([]);
+    processFile(pendingFile, sheetName);
   };
 
   return (
@@ -90,8 +139,18 @@ export default function Home() {
         loading={loading}
         error={error}
         filename={filename}
+        insightSource={insightSource}
+        providerLabel={providerConfig.label}
         onFile={handleFile}
       />
     </>
+  );
+}
+
+export default function Home() {
+  return (
+    <ApiKeyProvider>
+      <PageInner />
+    </ApiKeyProvider>
   );
 }
