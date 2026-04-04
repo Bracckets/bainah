@@ -2,6 +2,7 @@
 
 import { startTransition, useEffect, useState } from "react";
 import UploadPanel from "@/components/UploadPanel";
+import DataPrepPanel from "@/components/DataPrepPanel";
 import DatasetSummary from "@/components/DatasetSummary";
 import ChartsPanel from "@/components/ChartsPanel";
 import InsightsPanel from "@/components/InsightsPanel";
@@ -16,7 +17,7 @@ import {
   type PreparedPromptTextFile,
 } from "@/lib/aiPromptExport";
 import { generatePdfReport } from "@/lib/reportGenerator";
-import { ParsedDataset } from "@/types/dataset";
+import { ColumnMeta, ColumnType, DataPrepConfig, MissingValueStrategy, ParsedDataset } from "@/types/dataset";
 
 type WorkspaceView = "overview" | "charts" | "insights" | "anomalies" | "model";
 
@@ -31,6 +32,12 @@ interface HomeContentProps {
   hasAiConnection: boolean;
   onFile: (file: File) => Promise<void>;
   onGenerateAgentPrompt: () => Promise<PreparedPromptTextFile>;
+  sourceColumns: ColumnMeta[];
+  prepConfig: DataPrepConfig;
+  onTogglePrepColumn: (columnName: string) => void;
+  onTypeOverrideChange: (columnName: string, nextType: ColumnType | "") => void;
+  onMissingStrategyChange: (strategy: MissingValueStrategy) => void;
+  onResetPrep: () => void;
 }
 
 const WORKSPACE_VIEWS: {
@@ -136,6 +143,12 @@ export default function HomeContent({
   hasAiConnection,
   onFile,
   onGenerateAgentPrompt,
+  sourceColumns,
+  prepConfig,
+  onTogglePrepColumn,
+  onTypeOverrideChange,
+  onMissingStrategyChange,
+  onResetPrep,
 }: HomeContentProps) {
   const [activeView, setActiveView] = useState<WorkspaceView>("overview");
   const [storyIndex, setStoryIndex] = useState(0);
@@ -212,6 +225,14 @@ export default function HomeContent({
       case "overview":
         return (
           <>
+            <DataPrepPanel
+              sourceColumns={sourceColumns}
+              prepConfig={prepConfig}
+              onToggleColumn={onTogglePrepColumn}
+              onTypeOverrideChange={onTypeOverrideChange}
+              onMissingStrategyChange={onMissingStrategyChange}
+              onReset={onResetPrep}
+            />
             <DatasetSummary dataset={dataset} />
             <GlossaryPanel />
           </>

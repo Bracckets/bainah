@@ -66,6 +66,7 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: clip;
 }
 
 body {
@@ -82,6 +83,7 @@ body {
   font-family: var(--font-system);
   -webkit-font-smoothing: antialiased;
   line-height: 1.5;
+  overflow-x: clip;
 }
 
 ::selection {
@@ -127,6 +129,7 @@ a {
 
 .app-shell--apple {
   min-height: 100vh;
+  overflow-x: clip;
 }
 
 .topbar {
@@ -461,6 +464,9 @@ a {
 .wizard-result-summary,
 .panel-title,
 .panel-note,
+.prep-column-name,
+.prep-column-meta,
+.prep-label,
 .sidebar-note,
 .col-name,
 .summary-cell,
@@ -994,9 +1000,7 @@ a {
 }
 
 .workspace-nav {
-  position: sticky;
-  top: var(--sticky-top);
-  z-index: 60;
+  position: static;
 }
 
 .workspace-nav-scroll {
@@ -1500,6 +1504,93 @@ a {
 .wizard-target-row {
   display: grid;
   gap: 0.75rem;
+}
+
+.prep-toolbar {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.prep-toolbar-main {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.prep-select-block {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.prep-label {
+  font-size: 0.84rem;
+  color: var(--text-soft);
+}
+
+.prep-select,
+.prep-type-select {
+  width: 100%;
+}
+
+.prep-reset {
+  justify-content: center;
+}
+
+.prep-column-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.prep-column-row {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--panel-strong);
+}
+
+.prep-column-copy {
+  min-width: 0;
+}
+
+.prep-column-name {
+  font-size: 0.98rem;
+  font-weight: 620;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.prep-column-meta {
+  margin-top: 0.25rem;
+  font-size: 0.84rem;
+  color: var(--text-soft);
+}
+
+.prep-column-controls {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.prep-visibility-toggle,
+.prep-clear-type {
+  min-height: 2.75rem;
+  padding: 0 0.95rem;
+  border-radius: 999rem;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.prep-visibility-toggle--active {
+  border-color: rgba(17, 94, 53, 0.25);
+  background: rgba(17, 94, 53, 0.1);
+  color: #115e35;
+}
+
+.prep-visibility-toggle--muted {
+  color: var(--text-soft);
 }
 
 .wizard-label {
@@ -2058,6 +2149,21 @@ a {
   .wizard-select-row {
     grid-template-columns: minmax(0, 1fr) auto;
   }
+
+  .prep-toolbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+  }
+
+  .prep-column-row {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .prep-column-controls {
+    grid-template-columns: auto minmax(12rem, 1fr) auto;
+    align-items: center;
+  }
 }
 
 @media (min-width: 1040px) {
@@ -2108,6 +2214,18 @@ a {
     padding-top: 0.75rem;
   }
 
+  .workspace-header-main {
+    display: grid;
+    gap: 0.55rem;
+  }
+
+  .workspace-file-pill,
+  .workspace-status-pill {
+    width: 100%;
+    justify-content: flex-start;
+    border-radius: 1rem;
+  }
+
   .hero-stage,
   .workspace-header,
   .workspace-main,
@@ -2128,11 +2246,45 @@ a {
   }
 
   .workspace-nav-button {
-    min-width: 5.5rem;
+    min-width: 0;
+    width: 100%;
+    justify-content: flex-start;
+    padding: 0.75rem 0.85rem;
+    border-radius: 1rem;
   }
 
   .workspace-nav-text {
     font-size: 13px;
+  }
+
+  .workspace-nav-scroll {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+    overflow: visible;
+    padding: 0.45rem;
+    border-radius: 1.25rem;
+  }
+
+  .chart-switcher,
+  .chart-selector,
+  .export-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .workspace-chip,
+  .chart-selector-button,
+  .export-btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .chart-selector-button {
+    justify-content: center;
+    text-align: center;
+    min-height: 2.5rem;
   }
 
   .story-stage-card {
@@ -2153,6 +2305,17 @@ a {
   .story-chooser-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
+  }
+
+  .prep-column-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .prep-visibility-toggle,
+  .prep-clear-type,
+  .prep-reset {
+    width: 100%;
+    justify-content: center;
   }
 
   .apikey-panel {
@@ -2211,6 +2374,16 @@ a {
 
   .apikey-link {
     line-height: 1.4;
+  }
+}
+
+@media (max-width: 420px) {
+  .workspace-nav-scroll,
+  .chart-switcher,
+  .chart-selector,
+  .export-buttons,
+  .story-chooser-actions {
+    grid-template-columns: 1fr;
   }
 }
 

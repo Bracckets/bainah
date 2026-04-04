@@ -5,21 +5,29 @@ import HomeContent from "@/components/HomeContent";
 import SheetPicker from "@/components/SheetPicker";
 import { parseFile } from "@/lib/fileParser";
 import { classifyColumns } from "@/lib/columnClassifier";
-import { computeStats } from "@/lib/statisticsEngine";
-import { computeCorrelations } from "@/lib/correlationEngine";
 import { generateInsights } from "@/lib/insightGenerator";
 import { generateAiInsights } from "@/lib/aiInsightGenerator";
 import {
   exportDataAgentPrompt,
   type PreparedPromptTextFile,
 } from "@/lib/aiPromptExport";
-import { detectAnomalies } from "@/lib/anomalyDetector";
+import { buildPreparedDataset } from "@/lib/dataPrep";
 import { ApiKeyProvider, useApiKey } from "@/lib/ApiKeyContext";
-import { ParsedDataset } from "@/types/dataset";
+import { ParsedDataset, ColumnMeta, DataPrepConfig, MissingValueStrategy, ColumnType } from "@/types/dataset";
+
+const DEFAULT_PREP_CONFIG: DataPrepConfig = {
+  hiddenColumns: [],
+  typeOverrides: {},
+  missingStrategy: "keep",
+};
 
 function PageInner() {
   const { apiKey, provider, providerConfig, hasKey } = useApiKey();
   const [dataset, setDataset] = useState<ParsedDataset | null>(null);
+  const [sourceRows, setSourceRows] = useState<Record<string, string>[]>([]);
+  const [sourceColumnNames, setSourceColumnNames] = useState<string[]>([]);
+  const [sourceColumns, setSourceColumns] = useState<ColumnMeta[]>([]);
+  const [prepConfig, setPrepConfig] = useState<DataPrepConfig>(DEFAULT_PREP_CONFIG);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filename, setFilename] = useState("");
@@ -29,6 +37,21 @@ function PageInner() {
     "ai" | "rules" | "loading" | null
   >(null);
   const aiRunRef = useRef(0);
+
+  useEffect(() => {
+    if (sourceRows.length === 0 || sourceColumnNames.length === 0) return;
+
+    try {
+      const nextDataset = buildPreparedDataset(sourceRows, sourceColumnNames, prepConfig);
+      setDataset(nextDataset);
+      setError(null);
+      setInsightSource("rules");
+    } catch (e: unknown) {
+      setDataset(null);
+      setInsightSource(null);
+      setError(e instanceof Error ? e.message : "Unable to apply data prep.");
+    }
+  }, [sourceRows, sourceColumnNames, prepConfig]);
 
   useEffect(() => {
     if (!dataset) return;
@@ -93,29 +116,17 @@ function PageInner() {
       }
 
       const columnNames = Object.keys(rows[0]);
-      const columns = classifyColumns(rows, columnNames);
-      const stats = computeStats(rows, columns);
-      const correlations = computeCorrelations(rows, columns);
-      const rulesOnly = generateInsights(columns, stats, correlations);
-      const anomalies = detectAnomalies(rows, columns);
-
-      const initialDataset: ParsedDataset = {
-        rows,
-        columns,
-        rowCount: rows.length,
-        colCount: columnNames.length,
-        stats,
-        correlations,
-        insights: rulesOnly,
-        anomalies,
-      };
-
-      setDataset(initialDataset);
+      setSourceRows(rows);
+      setSourceColumnNames(columnNames);
+      setSourceColumns(classifyColumns(rows, columnNames));
+      setPrepConfig(DEFAULT_PREP_CONFIG);
       setPendingFile(null);
       setSheetNames([]);
-      setInsightSource("rules");
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Unknown error occurred.");
+      setSourceRows([]);
+      setSourceColumnNames([]);
+      setSourceColumns([]);
       setPendingFile(null);
       setSheetNames([]);
     } finally {
@@ -148,6 +159,45 @@ function PageInner() {
     });
   };
 
+  const handleTogglePrepColumn = (columnName: string) => {
+    setPrepConfig((current) => ({
+      ...current,
+      hiddenColumns: current.hiddenColumns.includes(columnName)
+        ? current.hiddenColumns.filter((entry) => entry !== columnName)
+        : [...current.hiddenColumns, columnName],
+    }));
+  };
+
+  const handleTypeOverrideChange = (columnName: string, nextType: ColumnType | "") => {
+    setPrepConfig((current) => {
+      const nextOverrides = { ...current.typeOverrides };
+      const sourceType = sourceColumns.find((column) => column.name === columnName)?.type;
+      if (!nextType) {
+        delete nextOverrides[columnName];
+      } else if (nextType === sourceType) {
+        delete nextOverrides[columnName];
+      } else {
+        nextOverrides[columnName] = nextType;
+      }
+
+      return {
+        ...current,
+        typeOverrides: nextOverrides,
+      };
+    });
+  };
+
+  const handleMissingStrategyChange = (strategy: MissingValueStrategy) => {
+    setPrepConfig((current) => ({
+      ...current,
+      missingStrategy: strategy,
+    }));
+  };
+
+  const handleResetPrep = () => {
+    setPrepConfig(DEFAULT_PREP_CONFIG);
+  };
+
   return (
     <>
       {sheetNames.length > 0 && (
@@ -164,6 +214,12 @@ function PageInner() {
         hasAiConnection={hasKey}
         onFile={handleFile}
         onGenerateAgentPrompt={handleGenerateAgentPrompt}
+        sourceColumns={sourceColumns}
+        prepConfig={prepConfig}
+        onTogglePrepColumn={handleTogglePrepColumn}
+        onTypeOverrideChange={handleTypeOverrideChange}
+        onMissingStrategyChange={handleMissingStrategyChange}
+        onResetPrep={handleResetPrep}
       />
     </>
   );

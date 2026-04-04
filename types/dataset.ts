@@ -68,6 +68,14 @@ export interface ParsedDataset {
   anomalies: AnomalyRow[];
 }
 
+export type MissingValueStrategy = 'keep' | 'drop-rows' | 'fill-by-type';
+
+export interface DataPrepConfig {
+  hiddenColumns: string[];
+  typeOverrides: Partial<Record<string, ColumnType>>;
+  missingStrategy: MissingValueStrategy;
+}
+
 // ─── Analysis Wizard Types ────────────────────────────────────────────────────
 
 export type WizardMode = 'understand' | 'drivers' | 'predict';
