@@ -1,104 +1,95 @@
-# BAINAH | بيّنة — AI Dataset Insight Generator
+# BAINAH | Bayyinah
 
-> *بيّنة* (Bayyinah) — Arabic for "clear evidence" or "proof." Upload a CSV. Receive instant clarity.
+> Bayyinah means "clear evidence" or "proof." Upload a CSV or XLSX file and move from raw rows to readable analysis in one workspace.
 
-A lightweight, portfolio-quality AI data analysis product built with **Next.js 14**, **TypeScript**, and **Recharts**. All analysis runs **entirely in the browser** — no backend, no API keys, no cost to run.
+BAINAH is a lightweight data analysis app built with **Next.js**, **TypeScript**, and **Recharts**. Core parsing, profiling, charting, anomaly detection, and local baseline modeling run in the browser. Optional AI features use a hosted proxy and a **session-only bring-your-own-key flow**.
 
----
+## What It Does
 
-## Screenshot
+- Upload CSV or XLSX files
+- Profile columns, missingness, and data types
+- Explore focused charts one view at a time
+- Review rule-based or AI-assisted insights
+- Inspect anomalies and correlations
+- Run a simple local baseline model with holdout evaluation
+- Export a branded Bayynah PDF report
 
-```
-┌─────────────────────────────────────────────────────┐
-│  بيّنة | BAINAH      AI Dataset Insight Generator   │
-├─────────────────────────────────────────────────────┤
-│  [ Upload Dataset ]  ← drag & drop CSV              │
-│  Dataset Overview  — rows · columns · types         │
-│  Visualisations    — histograms · bars · heatmap    │
-│  AI-Generated Insights — rule-based findings        │
-│  Anomalies Detected — Z-score flagging              │
-└─────────────────────────────────────────────────────┘
-```
+## Privacy And AI
 
----
+BAINAH is **not** a fully local AI product in the hosted deployment.
 
-## Features
+- Core dataset analysis runs in the browser
+- AI is optional
+- If you connect an AI provider, your key is kept in memory for the current session only
+- The app does **not** store your API key
+- AI requests are forwarded through the app's hosted proxy to the provider you selected
+- Dataset summaries sent for AI insight generation or prompt export also pass through that proxy
+- If AI is unavailable, the app continues with rule-based insights
+
+Short version: **analysis is local-first, AI is proxied, keys are session-only and not stored by the app**.
+
+## Feature Highlights
 
 | Feature | Description |
 |---|---|
-| **CSV Upload** | Drag-and-drop or click to upload. Parsed entirely in-browser via PapaParse. |
-| **Dataset Overview** | Row count, column count, type breakdown, missing value counts. |
-| **Column Type Detection** | Auto-detects Numeric, Categorical, Datetime, or Text using heuristics. |
-| **Statistical Analysis** | Mean, median, std dev, min/max for numeric; frequency distribution for categorical. |
-| **Correlation Analysis** | Pearson correlation matrix for all numeric column pairs. Highlights |r| > 0.7. |
-| **Automatic Visualisations** | Histograms, bar charts, correlation heatmap, scatter plots for strong correlations. |
-| **Insight Generation** | Rule-based insights translated into plain English: correlations, skew, dominance, missing data. |
-| **Anomaly Detection** | Z-score method flags any value where \|z\| > 3. Severity-ranked table. |
-
----
+| File upload | Upload `.csv` and `.xlsx` files from the browser |
+| Dataset overview | Rows, columns, missing values, and type breakdown |
+| Data prep | Hide columns, override types, and apply simple missing-value handling |
+| Statistical analysis | Numeric summaries, category frequencies, and correlations |
+| Charts | Focused chart families for distributions, categories, and relationships |
+| Insights | Rule-based findings, with optional AI-assisted narrative |
+| Anomaly detection | Z-score based anomaly review |
+| Modeling | Local holdout evaluation with baseline comparison |
+| Reporting | Branded PDF report export for analyst or executive handoff |
 
 ## Architecture
 
-```
+```text
 bainah/
 ├── app/
-│   ├── layout.tsx          # Root layout + metadata
-│   ├── page.tsx            # Main orchestration — state + analysis pipeline
-│   └── globals.css         # Full design system (CSS variables, all styles)
-│
-├── components/
-│   ├── UploadPanel.tsx     # Drag-and-drop CSV upload widget
-│   ├── DatasetSummary.tsx  # Overview stats + column type table
-│   ├── ChartsPanel.tsx     # All Recharts visualisations
-│   ├── InsightsPanel.tsx   # Insight cards rendered from insight objects
-│   └── AnomalyTable.tsx    # Z-score anomaly results table
-│
-├── lib/
-│   ├── csvParser.ts        # PapaParse wrapper
-│   ├── columnClassifier.ts # Heuristic type detection
-│   ├── statisticsEngine.ts # mean/median/std/histogram/frequencies
-│   ├── correlationEngine.ts# Pearson r for all numeric pairs
-│   ├── insightGenerator.ts # Rule-based insight objects
-│   └── anomalyDetector.ts  # Z-score flagging
-│
-└── types/
-    └── dataset.ts          # Full TypeScript type definitions
+│   ├── page.tsx            # Main orchestration and analysis flow
+│   ├── globals.css         # Design system and app styling
+│   └── api/ai/route.ts     # Hosted AI proxy for optional provider calls
+├── components/             # App UI and analysis views
+├── lib/                    # Parsing, analysis, AI, prep, and report logic
+└── types/                  # Shared TypeScript models
 ```
 
-### Analysis pipeline (all client-side)
+## Analysis Pipeline
 
+```text
+File
+→ parse
+→ classify columns
+→ apply prep rules
+→ compute stats
+→ correlations
+→ anomalies
+→ insights
+→ optional model baseline
+→ render workspace
 ```
-File → parseCSV → classifyColumns → computeStats
-                                  → computeCorrelations
-                                  → generateInsights
-                                  → detectAnomalies
-                                  → render components
-```
-
----
 
 ## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 14 (App Router) |
-| Language | TypeScript (strict mode) |
-| Charts | Recharts 2 |
-| CSV Parsing | PapaParse 5 |
-| Statistics | Custom TypeScript utilities (no heavy deps) |
-| Anomaly Detection | Z-score (no ML libraries) |
+| Framework | Next.js |
+| Language | TypeScript |
+| Charts | Recharts |
+| CSV parsing | PapaParse |
+| Excel parsing | read-excel-file |
+| PDF export | pdf-lib |
 | Deployment | Vercel |
 
----
-
-## Getting Started
+## Local Development
 
 ### Prerequisites
 
 - Node.js 18+
-- npm / yarn / pnpm
+- npm
 
-### Local development
+### Run
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/bainah.git
@@ -109,11 +100,9 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
----
+## Deploying
 
-## Deployment on Vercel
-
-### Option A — Vercel CLI
+BAINAH is designed to deploy well on Vercel.
 
 ```bash
 npm i -g vercel
@@ -121,56 +110,12 @@ vercel login
 vercel --prod
 ```
 
-### Option B — Vercel Dashboard
+## Notes
 
-1. Push this repo to GitHub / GitLab / Bitbucket.
-2. Go to [vercel.com/new](https://vercel.com/new).
-3. Import your repository.
-4. Leave all settings at defaults — Vercel auto-detects Next.js.
-5. Click **Deploy**.
-
-> **Cost:** \$0. All analysis is client-side. No serverless functions, no database, no API keys required.
-
----
-
-## Example Datasets
-
-Try these free CSVs:
-
-- **Titanic** — [kaggle.com/c/titanic](https://www.kaggle.com/c/titanic/data) — mix of numeric + categorical
-- **Iris** — classic, 150 rows, 4 numeric + 1 categorical column
-- **World Happiness Report** — strong numeric correlations
-- **NYC Airbnb** — anomaly detection works great here
-
----
-
-## Performance
-
-- Handles CSVs up to **10 MB** comfortably
-- Analysis completes in **< 500ms** for most datasets
-- No server round-trips — all computation in the browser via Web APIs
-- Charts render lazily via Recharts' `ResponsiveContainer`
-
----
-
-## Design System
-
-Aesthetic: **refined dark editorial** — Arabic scholarly meets data terminal.
-
-- **Display font:** DM Serif Display
-- **Body/mono font:** IBM Plex Mono  
-- **Arabic script:** Amiri
-- **Accent colour:** Antique gold `#c9a96e`
-- **Secondary accent:** Steel blue `#5b8db8`
-
----
-
-## Contributing
-
-PRs welcome. Please keep each analysis utility isolated in `lib/` and fully typed.
-
----
+- `.xls` is intentionally not supported; use `.xlsx` or `.csv`
+- The hosted build uses security headers and a validated AI proxy, but BYO-key is still a trust-based hosted architecture
+- For the best experience, desktop or iPad-sized screens are recommended
 
 ## License
 
-MIT © 2024
+MIT

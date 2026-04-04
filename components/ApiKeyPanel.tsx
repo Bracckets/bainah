@@ -92,8 +92,9 @@ export default function ApiKeyPanel() {
         </div>
 
         <p className="apikey-sub">
-          Your key stays in memory for this session, is forwarded only to
-          complete the selected request, and is never stored by the app.
+          Your key stays in memory for this session, is forwarded through the
+          app only to complete the selected request, and is never stored by the
+          app.
         </p>
 
         <div className="provider-tabs provider-tabs--sheet">
@@ -184,8 +185,8 @@ export default function ApiKeyPanel() {
             Open {providerConfig.label} key docs
           </a>
           <p className="apikey-privacy">
-            If AI is unavailable, the workspace keeps running with rule-based
-            insights.
+            Core analysis stays available in-browser even if AI is unavailable,
+            and the workspace falls back to rule-based insights.
           </p>
         </div>
       </div>

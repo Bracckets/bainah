@@ -47,7 +47,7 @@ export default function InsightsPanel({
 
       <p className="section-sub">
         {source === "ai"
-          ? `These findings were generated with ${aiLabel} and grounded in the dataset statistics already shown in the workspace.`
+          ? `These findings were generated with ${aiLabel} through the app proxy and grounded in the dataset statistics already shown in the workspace.`
           : source === "loading"
             ? `Rule-based findings remain visible while ${aiLabel} processes the same dataset summary through the app proxy.`
             : "These findings are generated directly from the current dataset statistics and analysis rules."}

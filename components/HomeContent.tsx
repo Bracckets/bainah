@@ -55,7 +55,7 @@ const WORKSPACE_VIEWS: {
 const ENTRY_POINTS = [
   {
     title: "Drop a file",
-    body: "Start with one CSV or Excel file. Parsing and analysis remain in the browser workflow.",
+    body: "Start with one CSV or Excel file. Core parsing, profiling, and modeling run in the browser.",
     icon: "upload" as const,
   },
   {
@@ -65,7 +65,7 @@ const ENTRY_POINTS = [
   },
   {
     title: "Add AI when needed",
-    body: "Use a session-only provider key for upgraded insights, or continue with rule-based analysis.",
+    body: "Use a session-only provider key for proxied AI features, or continue with rule-based analysis.",
     icon: "spark" as const,
   },
 ];
@@ -344,7 +344,7 @@ export default function HomeContent({
 
         <section className="hero-stage">
           <div className="hero-copy">
-            <span className="hero-eyebrow">Browser-native analysis</span>
+            <span className="hero-eyebrow">Local-first analysis</span>
             <h1 className="hero-title">
               Understand a dataset in one calm, continuous workspace.
             </h1>
@@ -497,14 +497,14 @@ export default function HomeContent({
                     name={insightSource === "ai" ? "spark" : "overview"}
                     size={14}
                   />
-                  <span>
-                    {insightSource === "ai"
-                      ? `AI via ${providerLabel}`
+                    <span>
+                      {insightSource === "ai"
+                        ? `AI via ${providerLabel}`
                       : insightSource === "loading"
-                        ? `Waiting for ${providerLabel}`
+                        ? `Waiting for ${providerLabel} via app proxy`
                         : "Rule-based insights"}
-                  </span>
-                </div>
+                    </span>
+                  </div>
               </div>
 
               <div className="workspace-metrics">
