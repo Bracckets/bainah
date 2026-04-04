@@ -1,47 +1,79 @@
-'use client';
-// ─── UploadPanel ─────────────────────────────────────────────────────────────
+"use client";
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState } from "react";
+import SystemIcon from "@/components/SystemIcon";
 
 interface Props {
   onFile: (file: File) => void;
   isLoading: boolean;
 }
 
+const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
+
 export default function UploadPanel({ onFile, isLoading }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const handleFile = (file: File) => {
-    const ext = file.name.split('.').pop()?.toLowerCase();
-    if (ext === 'csv' || ext === 'xlsx' || ext === 'xls') onFile(file);
-  };
+    const extension = file.name.split(".").pop()?.toLowerCase();
+    if (extension !== "csv" && extension !== "xlsx") {
+      setUploadError("Only CSV and XLSX files are supported.");
+      return;
+    }
 
-  const onDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragging(false);
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setUploadError("Files larger than 15 MB are blocked to protect browser performance.");
+      return;
+    }
+
+    setUploadError(null);
+    onFile(file);
   };
 
   return (
-    <div className="upload-zone" style={{ borderColor: dragging ? 'var(--accent)' : undefined }}
-      onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+    <button
+      type="button"
+      className={`upload-dropzone ${dragging ? "upload-dropzone--active" : ""}`}
+      onDragOver={(event) => {
+        event.preventDefault();
+        setDragging(true);
+      }}
       onDragLeave={() => setDragging(false)}
-      onDrop={onDrop}
+      onDrop={(event) => {
+        event.preventDefault();
+        setDragging(false);
+        const file = event.dataTransfer.files[0];
+        if (file) handleFile(file);
+      }}
       onClick={() => !isLoading && inputRef.current?.click()}
     >
-      <input ref={inputRef} type="file" accept=".csv,.xlsx,.xls" style={{ display: 'none' }}
-        onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
-      <div className="upload-icon">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-          <polyline points="17 8 12 3 7 8"/>
-          <line x1="12" y1="3" x2="12" y2="15"/>
-        </svg>
+      <input
+        ref={inputRef}
+        type="file"
+        name="datasetFile"
+        aria-hidden="true"
+        tabIndex={-1}
+        accept=".csv,.xlsx"
+        style={{ display: "none" }}
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) handleFile(file);
+        }}
+      />
+
+      <div className="upload-dropzone-icon">
+        <SystemIcon name="upload" size={24} />
       </div>
-      <p className="upload-title">{isLoading ? 'Analysing dataset…' : 'Drop your CSV or Excel file here'}</p>
-      <p className="upload-sub">or click to browse · up to 10 MB</p>
-    </div>
+      <div className="upload-dropzone-copy">
+        <p className="upload-dropzone-title">
+          {isLoading ? "Analyzing dataset..." : "Drop a CSV or XLSX file"}
+        </p>
+        <p className="upload-dropzone-body">
+          Tap to browse or drag a file here. The main workflow is designed for one active dataset at a time.
+        </p>
+        {uploadError && <p className="status-line status-line--error">{uploadError}</p>}
+      </div>
+    </button>
   );
 }
