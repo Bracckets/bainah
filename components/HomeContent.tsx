@@ -10,6 +10,12 @@ import GlossaryPanel from "@/components/GlossaryPanel";
 import ApiKeyPanel from "@/components/ApiKeyPanel";
 import AnalysisWizard from "@/components/AnalysisWizard";
 import SystemIcon from "@/components/SystemIcon";
+import { PROVIDERS, type AIProvider } from "@/lib/ApiKeyContext";
+import {
+  downloadTextFile,
+  type PreparedPromptTextFile,
+} from "@/lib/aiPromptExport";
+import { generatePdfReport } from "@/lib/reportGenerator";
 import { ParsedDataset } from "@/types/dataset";
 
 type WorkspaceView = "overview" | "charts" | "insights" | "anomalies" | "model";
@@ -20,8 +26,11 @@ interface HomeContentProps {
   error: string | null;
   filename: string;
   insightSource: "ai" | "rules" | "loading" | null;
+  providerId: AIProvider;
   providerLabel: string;
+  hasAiConnection: boolean;
   onFile: (file: File) => Promise<void>;
+  onGenerateAgentPrompt: () => Promise<PreparedPromptTextFile>;
 }
 
 const WORKSPACE_VIEWS: {
@@ -122,13 +131,22 @@ export default function HomeContent({
   error,
   filename,
   insightSource,
+  providerId,
   providerLabel,
+  hasAiConnection,
   onFile,
+  onGenerateAgentPrompt,
 }: HomeContentProps) {
   const [activeView, setActiveView] = useState<WorkspaceView>("overview");
   const [storyIndex, setStoryIndex] = useState(0);
   const [storyDismissed, setStoryDismissed] = useState(false);
   const [storyFinished, setStoryFinished] = useState(false);
+  const [reporting, setReporting] = useState(false);
+  const [promptExporting, setPromptExporting] = useState(false);
+  const [promptExportError, setPromptExportError] = useState<string | null>(null);
+  const [readyPromptFile, setReadyPromptFile] = useState<PreparedPromptTextFile | null>(
+    null
+  );
 
   useEffect(() => {
     if (dataset || storyDismissed || storyFinished) return;
@@ -146,6 +164,11 @@ export default function HomeContent({
     return () => window.clearTimeout(timeout);
   }, [dataset, storyDismissed, storyFinished, storyIndex]);
 
+  useEffect(() => {
+    setPromptExportError(null);
+    setReadyPromptFile(null);
+  }, [dataset, providerId, hasAiConnection]);
+
   const snapshot = dataset
     ? {
         rows: dataset.rowCount.toLocaleString(),
@@ -159,6 +182,9 @@ export default function HomeContent({
         anomalies: dataset.anomalies.length,
       }
     : null;
+
+  const activeProviderConfig =
+    PROVIDERS.find((provider) => provider.id === providerId) ?? null;
 
   const exportDataset = () => {
     if (!dataset) return;
@@ -227,6 +253,45 @@ export default function HomeContent({
     setStoryDismissed(true);
     setStoryFinished(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleGenerateReport = async () => {
+    if (!dataset || reporting) return;
+    setReporting(true);
+    try {
+      await generatePdfReport({
+        dataset,
+        filename,
+        insightSource,
+        providerLabel,
+      });
+    } finally {
+      setReporting(false);
+    }
+  };
+
+  const handleGenerateAgentPrompt = async () => {
+    if (!dataset || !hasAiConnection || promptExporting) return;
+    setPromptExportError(null);
+    setPromptExporting(true);
+
+    try {
+      const preparedFile = await onGenerateAgentPrompt();
+      setReadyPromptFile(preparedFile);
+    } catch (e: unknown) {
+      setPromptExportError(
+        e instanceof Error
+          ? e.message
+          : "AI prompt export is temporarily unavailable."
+      );
+      } finally {
+      setPromptExporting(false);
+    }
+  };
+
+  const handleDownloadPreparedPrompt = () => {
+    if (!readyPromptFile) return;
+    downloadTextFile(readyPromptFile.content, readyPromptFile.filename);
   };
 
   return (
@@ -468,6 +533,43 @@ export default function HomeContent({
                   <p className="section-kicker">Actions</p>
                   <div className="sidebar-actions">
                     <button
+                      className="sidebar-action sidebar-action--primary"
+                      onClick={handleGenerateReport}
+                      disabled={reporting}
+                    >
+                      <SystemIcon name="download" size={16} />
+                      <span>{reporting ? "Generating PDF report..." : "Generate PDF report"}</span>
+                    </button>
+                    {hasAiConnection && activeProviderConfig && (
+                      <>
+                        <button
+                          className="sidebar-action sidebar-action--ai-export"
+                          onClick={handleGenerateAgentPrompt}
+                          disabled={promptExporting}
+                        >
+                          <ProviderBadge color={activeProviderConfig.color} />
+                          <span className="sidebar-action-text-strong">
+                            {promptExporting
+                              ? "Generating data-agent prompt..."
+                              : readyPromptFile
+                                ? "Regenerate data-agent prompt"
+                                : "Generate data-agent prompt"}
+                          </span>
+                        </button>
+                        {readyPromptFile && (
+                          <button
+                            className="sidebar-action sidebar-action--ai-ready"
+                            onClick={handleDownloadPreparedPrompt}
+                          >
+                            <SystemIcon name="file" size={16} />
+                            <span className="sidebar-action-text-strong">
+                              Prompt text file is ready
+                            </span>
+                          </button>
+                        )}
+                      </>
+                    )}
+                    <button
                       className="sidebar-action"
                       onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                     >
@@ -486,6 +588,11 @@ export default function HomeContent({
                       <span>Open model workspace</span>
                     </button>
                   </div>
+                  {promptExportError && (
+                    <p className="sidebar-note sidebar-note--error">
+                      {promptExportError}
+                    </p>
+                  )}
                 </div>
 
                 <div className="sidebar-block">
@@ -568,4 +675,43 @@ function MetricTile({
       <span className="metric-tile-value">{value}</span>
     </div>
   );
+}
+
+function ProviderBadge({ color }: { color: string }) {
+  return (
+    <span
+      className="sidebar-provider-badge"
+      style={{ color: getProviderSparkColor(color) }}
+      aria-hidden="true"
+    >
+      <SystemIcon name="spark" size={16} strokeWidth={2} />
+    </span>
+  );
+}
+
+function getProviderSparkColor(hexColor: string) {
+  const normalized = hexColor.replace("#", "");
+  const safeHex =
+    normalized.length === 3
+      ? normalized
+          .split("")
+          .map((value) => `${value}${value}`)
+          .join("")
+      : normalized.padEnd(6, "0").slice(0, 6);
+
+  const red = Number.parseInt(safeHex.slice(0, 2), 16);
+  const green = Number.parseInt(safeHex.slice(2, 4), 16);
+  const blue = Number.parseInt(safeHex.slice(4, 6), 16);
+
+  if (!Number.isFinite(red) || !Number.isFinite(green) || !Number.isFinite(blue)) {
+    return "#2563eb";
+  }
+
+  const mixedBlue = {
+    red: Math.round(red * 0.2),
+    green: Math.round(green * 0.35 + 64),
+    blue: Math.round(Math.min(255, blue * 0.65 + 128)),
+  };
+
+  return `rgb(${mixedBlue.red}, ${mixedBlue.green}, ${mixedBlue.blue})`;
 }

@@ -8,15 +8,27 @@ interface Props {
   isLoading: boolean;
 }
 
+const MAX_UPLOAD_BYTES = 15 * 1024 * 1024;
+
 export default function UploadPanel({ onFile, isLoading }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const handleFile = (file: File) => {
     const extension = file.name.split(".").pop()?.toLowerCase();
-    if (extension === "csv" || extension === "xlsx" || extension === "xls") {
-      onFile(file);
+    if (extension !== "csv" && extension !== "xlsx") {
+      setUploadError("Only CSV and XLSX files are supported.");
+      return;
     }
+
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setUploadError("Files larger than 15 MB are blocked to protect browser performance.");
+      return;
+    }
+
+    setUploadError(null);
+    onFile(file);
   };
 
   return (
@@ -42,7 +54,7 @@ export default function UploadPanel({ onFile, isLoading }: Props) {
         name="datasetFile"
         aria-hidden="true"
         tabIndex={-1}
-        accept=".csv,.xlsx,.xls"
+        accept=".csv,.xlsx"
         style={{ display: "none" }}
         onChange={(event) => {
           const file = event.target.files?.[0];
@@ -55,11 +67,12 @@ export default function UploadPanel({ onFile, isLoading }: Props) {
       </div>
       <div className="upload-dropzone-copy">
         <p className="upload-dropzone-title">
-          {isLoading ? "Analyzing dataset…" : "Drop a CSV or Excel file"}
+          {isLoading ? "Analyzing dataset..." : "Drop a CSV or XLSX file"}
         </p>
         <p className="upload-dropzone-body">
           Tap to browse or drag a file here. The main workflow is designed for one active dataset at a time.
         </p>
+        {uploadError && <p className="status-line status-line--error">{uploadError}</p>}
       </div>
     </button>
   );

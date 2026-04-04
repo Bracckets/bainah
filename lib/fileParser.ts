@@ -1,8 +1,8 @@
 ﻿// --- File Parser -------------------------------------------------------------
-// Supports CSV (PapaParse) and Excel (SheetJS) with auto-detection by extension.
+// Supports CSV (PapaParse) and XLSX spreadsheets with auto-detection by extension.
 
 import Papa from 'papaparse';
-import { read, utils, type WorkSheet } from 'xlsx';
+import readXlsxFile, { readSheet } from 'read-excel-file/browser';
 
 export type ParseFileResult =
   | { type: 'rows'; data: Record<string, string>[] }
@@ -137,37 +137,27 @@ function buildHeadersFromRow(row: RawRow, columnCount: number): string[] {
   return dedupeHeaders(headers);
 }
 
-function findDataTable(worksheet: WorkSheet): HeaderDetectionResult {
-  const rawRows = utils.sheet_to_json<RawRow>(worksheet, {
-    header: 1,
-    raw: true,
-    defval: null,
-  });
-
-  const rowMeta = worksheet['!rows'] || [];
-  const isHiddenRow = (index: number) => Boolean(rowMeta[index]?.hidden);
-
+function findDataTable(rawRows: RawRow[]): HeaderDetectionResult {
   const maxScan = Math.min(50, rawRows.length);
   let bestIndex = 0;
   let bestScore = -Infinity;
 
-  const findPrevVisibleIndex = (index: number) => {
+  const findPrevIndex = (index: number) => {
     for (let i = index - 1; i >= 0; i -= 1) {
-      if (!isHiddenRow(i)) return i;
+      return i;
     }
     return -1;
   };
 
-  const findNextVisibleIndices = (index: number, count: number) => {
+  const findNextIndices = (index: number, count: number) => {
     const indices: number[] = [];
     for (let i = index + 1; i < rawRows.length && indices.length < count; i += 1) {
-      if (!isHiddenRow(i)) indices.push(i);
+      indices.push(i);
     }
     return indices;
   };
 
   for (let i = 0; i < maxScan; i += 1) {
-    if (isHiddenRow(i)) continue;
     const row = rawRows[i] || [];
     const nonEmpty = countNonEmpty(row);
     if (nonEmpty < 3) continue;
@@ -195,13 +185,13 @@ function findDataTable(worksheet: WorkSheet): HeaderDetectionResult {
 
     score += 1;
 
-    const prevIndex = findPrevVisibleIndex(i);
+    const prevIndex = findPrevIndex(i);
     if (prevIndex >= 0) {
       const prevRow = rawRows[prevIndex] || [];
       if (countNonEmpty(prevRow) <= 1) score += 1;
     }
 
-    const nextIndices = findNextVisibleIndices(i, 3);
+    const nextIndices = findNextIndices(i, 3);
     let numericHeavyRows = 0;
     for (const idx of nextIndices) {
       const nextRow = rawRows[idx] || [];
@@ -290,37 +280,36 @@ export function parseFile(file: File, sheetName?: string): Promise<ParseFileResu
         complete: (results) => resolve({ type: 'rows', data: results.data }),
         error: (err) => reject(err),
       });
-    } else if (extension === 'xlsx' || extension === 'xls') {
-      // Excel parsing with SheetJS
-      const reader = new FileReader();
-      reader.onload = (e) => {
+    } else if (extension === 'xlsx') {
+      // XLSX parsing with read-excel-file
+      (async () => {
         try {
-          const data = e.target?.result as ArrayBuffer;
-          const workbook = read(data, { type: 'array' });
+          if (!sheetName) {
+            const sheets = await readXlsxFile(file);
+            if (sheets.length > 1) {
+              resolve({ type: 'sheets', names: sheets.map((sheet) => sheet.sheet) });
+              return;
+            }
 
-          // If multiple sheets and no sheetName provided, return sheet names
-          if (workbook.SheetNames.length > 1 && !sheetName) {
-            resolve({ type: 'sheets', names: workbook.SheetNames });
+            const rawRows = (sheets[0]?.data ?? []) as RawRow[];
+            const { headerRowIndex, headers } = findDataTable(rawRows);
+            resolve({ type: 'rows', data: buildRecords(rawRows, headerRowIndex, headers) });
             return;
           }
 
-          // Parse the specified sheet (or the first if single sheet)
-          const targetSheet = sheetName || workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[targetSheet];
-          const rawRows = utils.sheet_to_json<RawRow>(worksheet, {
-            header: 1,
-            raw: true,
-            defval: null,
-          });
-          const { headerRowIndex, headers } = findDataTable(worksheet);
-          const rows = buildRecords(rawRows, headerRowIndex, headers);
-          resolve({ type: 'rows', data: rows });
+          const rawRows = (await readSheet(file, sheetName)) as RawRow[];
+          const { headerRowIndex, headers } = findDataTable(rawRows);
+          resolve({ type: 'rows', data: buildRecords(rawRows, headerRowIndex, headers) });
         } catch (err) {
           reject(err);
         }
-      };
-      reader.onerror = () => reject(new Error('Failed to read Excel file'));
-      reader.readAsArrayBuffer(file);
+      })();
+    } else if (extension === 'xls') {
+      reject(
+        new Error(
+          'Legacy .xls files are no longer supported. Please resave the spreadsheet as .xlsx or export it as .csv.'
+        )
+      );
     } else {
       reject(new Error(`Unsupported file type: .${extension}`));
     }

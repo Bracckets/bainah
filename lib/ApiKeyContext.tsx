@@ -15,6 +15,8 @@ export interface ProviderConfig {
   color: string;
   model: string;
   endpoint: string;
+  keyPrefixes: string[];
+  keyRuleLabel: string;
 }
 
 export const PROVIDERS: ProviderConfig[] = [
@@ -24,8 +26,10 @@ export const PROVIDERS: ProviderConfig[] = [
     placeholder: "sk-ant-api03-…",
     docsUrl: "https://console.anthropic.com/settings/keys",
     color: "#c9a96e",
-    model: "claude-haiku-4-5-20251001",
+    model: "claude-3-5-haiku-latest",
     endpoint: "https://api.anthropic.com/v1/messages",
+    keyPrefixes: ["sk-ant-"],
+    keyRuleLabel: "Start with sk-ant-",
   },
   {
     id: "openai",
@@ -35,6 +39,8 @@ export const PROVIDERS: ProviderConfig[] = [
     color: "#10a37f",
     model: "gpt-4o-mini",
     endpoint: "https://api.openai.com/v1/chat/completions",
+    keyPrefixes: ["sk-", "sk-proj-"],
+    keyRuleLabel: "Start with sk- or sk-proj-",
   },
   {
     id: "gemini",
@@ -45,6 +51,8 @@ export const PROVIDERS: ProviderConfig[] = [
     model: "gemini-3-flash-preview",
     endpoint:
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent",
+    keyPrefixes: ["AIza"],
+    keyRuleLabel: "Start with AIza",
   },
   {
     id: "groq",
@@ -52,10 +60,36 @@ export const PROVIDERS: ProviderConfig[] = [
     placeholder: "gsk_…",
     docsUrl: "https://console.groq.com/keys",
     color: "#f55036",
-    model: "llama3-8b-8192",
+    model: "llama-3.1-8b-instant",
     endpoint: "https://api.groq.com/openai/v1/chat/completions",
+    keyPrefixes: ["gsk_"],
+    keyRuleLabel: "Start with gsk_",
   },
 ];
+
+export function validateApiKeyForProvider(
+  providerConfig: ProviderConfig,
+  rawKey: string
+) {
+  const key = rawKey.trim();
+
+  if (!key) {
+    return { valid: false, message: "Enter an API key to continue." };
+  }
+
+  const matchesPrefix = providerConfig.keyPrefixes.some((prefix) =>
+    key.startsWith(prefix)
+  );
+
+  if (!matchesPrefix) {
+    return {
+      valid: false,
+      message: `${providerConfig.label} keys should ${providerConfig.keyRuleLabel.toLowerCase()}.`,
+    };
+  }
+
+  return { valid: true, message: "" };
+}
 
 interface ApiKeyContextValue {
   provider: AIProvider;

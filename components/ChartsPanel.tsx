@@ -47,6 +47,11 @@ export default function ChartsPanel({ dataset }: Props) {
   const strongCorrelations = dataset.correlations
     .filter((item) => Math.abs(item.r) >= 0.7 && item.significant)
     .slice(0, 6);
+  const selectedNumericColumn = numericColumns[selectedIndex] ?? numericColumns[0];
+  const selectedCategoricalColumn =
+    categoricalColumns[selectedIndex] ?? categoricalColumns[0];
+  const selectedScatterCorrelation =
+    strongCorrelations[selectedIndex] ?? strongCorrelations[0];
 
   const chartCount =
     activeView === "numeric"
@@ -128,18 +133,9 @@ export default function ChartsPanel({ dataset }: Props) {
           {numericColumns.length === 0 ? (
             <p className="empty-state">No numeric columns available for distribution charts.</p>
           ) : (
-            <>
-              <div className="chart-mobile-card">
-                {renderNumericChart(dataset, numericColumns[selectedIndex].name)}
-              </div>
-              <div className="chart-grid chart-grid--desktop">
-                {numericColumns.slice(0, 6).map((column) => (
-                  <div key={column.name} className="chart-card">
-                    {renderNumericChart(dataset, column.name)}
-                  </div>
-                ))}
-              </div>
-            </>
+            <div className="chart-card">
+              {renderNumericChart(dataset, selectedNumericColumn.name)}
+            </div>
           )}
         </div>
       )}
@@ -149,18 +145,9 @@ export default function ChartsPanel({ dataset }: Props) {
           {categoricalColumns.length === 0 ? (
             <p className="empty-state">No categorical columns available for frequency charts.</p>
           ) : (
-            <>
-              <div className="chart-mobile-card">
-                {renderCategoricalChart(dataset, categoricalColumns[selectedIndex].name)}
-              </div>
-              <div className="chart-grid chart-grid--desktop">
-                {categoricalColumns.slice(0, 4).map((column) => (
-                  <div key={column.name} className="chart-card">
-                    {renderCategoricalChart(dataset, column.name)}
-                  </div>
-                ))}
-              </div>
-            </>
+            <div className="chart-card">
+              {renderCategoricalChart(dataset, selectedCategoricalColumn.name)}
+            </div>
           )}
         </div>
       )}
@@ -180,21 +167,9 @@ export default function ChartsPanel({ dataset }: Props) {
           {strongCorrelations.length === 0 ? (
             <p className="empty-state">No strong significant correlations were found for scatter views.</p>
           ) : (
-            <>
-              <div className="chart-mobile-card">
-                {renderScatterChart(dataset, strongCorrelations[selectedIndex])}
-              </div>
-              <div className="chart-grid chart-grid--desktop">
-                {strongCorrelations.map((correlation) => (
-                  <div
-                    key={`${correlation.colA}-${correlation.colB}`}
-                    className="chart-card"
-                  >
-                    {renderScatterChart(dataset, correlation)}
-                  </div>
-                ))}
-              </div>
-            </>
+            <div className="chart-card">
+              {renderScatterChart(dataset, selectedScatterCorrelation)}
+            </div>
           )}
         </div>
       )}

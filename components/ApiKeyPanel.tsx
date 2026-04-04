@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { useApiKey, PROVIDERS, AIProvider } from "@/lib/ApiKeyContext";
+import {
+  useApiKey,
+  PROVIDERS,
+  AIProvider,
+  validateApiKeyForProvider,
+} from "@/lib/ApiKeyContext";
 import SystemIcon from "@/components/SystemIcon";
 
 const MASK_DOT = "•";
@@ -21,6 +26,8 @@ export default function ApiKeyPanel() {
   const [visible, setVisible] = useState(false);
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const trimmedDraft = draft.trim();
+  const keyValidation = validateApiKeyForProvider(providerConfig, trimmedDraft);
 
   useEffect(() => {
     setMounted(true);
@@ -148,16 +155,19 @@ export default function ApiKeyPanel() {
                 {visible ? "Hide" : "Show"}
               </button>
             </div>
+            {trimmedDraft && !keyValidation.valid && (
+              <p className="apikey-validation">{keyValidation.message}</p>
+            )}
             <button
               type="button"
               className="apikey-btn"
               onClick={() => {
-                if (!draft.trim()) return;
-                setApiKey(draft.trim());
+                if (!keyValidation.valid) return;
+                setApiKey(trimmedDraft);
                 setDraft("");
                 setOpen(false);
               }}
-              disabled={!draft.trim()}
+              disabled={!trimmedDraft || !keyValidation.valid}
             >
               Save Key
             </button>

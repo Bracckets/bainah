@@ -8,6 +8,7 @@ import {
   PredictionResult,
 } from "@/types/dataset";
 import { runDriversAnalysis, runPrediction } from "@/lib/analysisEngine";
+import AppSelect from "@/components/AppSelect";
 import DriversPanel from "./DriversPanel";
 import PredictionPanel from "./PredictionPanel";
 
@@ -46,6 +47,12 @@ export default function AnalysisWizard({ dataset }: Props) {
 
   const numericColumns = dataset.columns.filter((column) => column.type === "numeric");
   const selectableColumns = dataset.columns.filter((column) => column.type !== "text");
+  const targetOptions = (mode === "drivers" ? numericColumns : selectableColumns).map(
+    (column) => ({
+      value: column.name,
+      label: `${column.name} (${column.type})`,
+    })
+  );
 
   const handleRun = () => {
     if (!targetColumn) return;
@@ -137,20 +144,13 @@ export default function AnalysisWizard({ dataset }: Props) {
               : "Choose a target column for a local baseline model"}
           </label>
           <div className="wizard-select-row">
-            <select
+            <AppSelect
               className="wizard-select"
               value={targetColumn}
-              onChange={(event) => setTargetColumn(event.target.value)}
-            >
-              <option value="">Select a column</option>
-              {(mode === "drivers" ? numericColumns : selectableColumns).map(
-                (column) => (
-                  <option key={column.name} value={column.name}>
-                    {column.name} ({column.type})
-                  </option>
-                )
-              )}
-            </select>
+              placeholder="Select a column"
+              options={targetOptions}
+              onChange={setTargetColumn}
+            />
             <button
               className="wizard-run-btn"
               disabled={!targetColumn || running}

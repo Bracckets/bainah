@@ -9,12 +9,16 @@ import { computeStats } from "@/lib/statisticsEngine";
 import { computeCorrelations } from "@/lib/correlationEngine";
 import { generateInsights } from "@/lib/insightGenerator";
 import { generateAiInsights } from "@/lib/aiInsightGenerator";
+import {
+  exportDataAgentPrompt,
+  type PreparedPromptTextFile,
+} from "@/lib/aiPromptExport";
 import { detectAnomalies } from "@/lib/anomalyDetector";
 import { ApiKeyProvider, useApiKey } from "@/lib/ApiKeyContext";
 import { ParsedDataset } from "@/types/dataset";
 
 function PageInner() {
-  const { apiKey, provider, providerConfig } = useApiKey();
+  const { apiKey, provider, providerConfig, hasKey } = useApiKey();
   const [dataset, setDataset] = useState<ParsedDataset | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -129,6 +133,21 @@ function PageInner() {
     processFile(pendingFile, sheetName);
   };
 
+  const handleGenerateAgentPrompt = async (): Promise<PreparedPromptTextFile> => {
+    if (!dataset || !apiKey) {
+      throw new Error("AI prompt export is temporarily unavailable.");
+    }
+
+    return exportDataAgentPrompt({
+      dataset,
+      filename,
+      provider,
+      providerConfig,
+      apiKey,
+      insightSource,
+    });
+  };
+
   return (
     <>
       {sheetNames.length > 0 && (
@@ -140,8 +159,11 @@ function PageInner() {
         error={error}
         filename={filename}
         insightSource={insightSource}
+        providerId={provider}
         providerLabel={providerConfig.label}
+        hasAiConnection={hasKey}
         onFile={handleFile}
+        onGenerateAgentPrompt={handleGenerateAgentPrompt}
       />
     </>
   );
