@@ -38,6 +38,16 @@ const TOOLTIP_ITEM_STYLE = {
 
 export default function PredictionPanel({ result, dataset }: Props) {
   const isRegression = result.taskType === "regression";
+  const regressionImproved =
+    isRegression &&
+    result.rmse !== undefined &&
+    result.baselineRmse !== undefined &&
+    result.rmse < result.baselineRmse;
+  const classificationImproved =
+    !isRegression &&
+    result.accuracy !== undefined &&
+    result.baselineAccuracy !== undefined &&
+    result.accuracy > result.baselineAccuracy;
 
   return (
     <div className="wizard-result">
@@ -45,26 +55,50 @@ export default function PredictionPanel({ result, dataset }: Props) {
 
       <div className="stat-grid">
         <MetricBox label="Model" value={result.modelName} compact />
+        <MetricBox label="Evaluation" value={result.evaluationLabel} compact />
+        <MetricBox label="Train rows" value={result.trainRowCount.toLocaleString()} />
+        <MetricBox label="Test rows" value={result.testRowCount.toLocaleString()} />
         {isRegression && result.r2 !== undefined && (
           <>
             <MetricBox
-              label="R-squared"
+              label="Test R-squared"
               value={result.r2.toFixed(3)}
               tone={result.r2 > 0.6 ? "good" : "default"}
             />
-            <MetricBox label="RMSE" value={result.rmse!.toFixed(2)} />
-            <MetricBox label="MAE" value={result.mae!.toFixed(2)} />
+            <MetricBox
+              label="Test RMSE"
+              value={result.rmse!.toFixed(2)}
+              tone={regressionImproved ? "good" : "default"}
+            />
+            <MetricBox label="Baseline RMSE" value={result.baselineRmse!.toFixed(2)} />
+            <MetricBox label="Test MAE" value={result.mae!.toFixed(2)} />
           </>
         )}
         {!isRegression && result.accuracy !== undefined && (
-          <MetricBox
-            label="Accuracy"
-            value={`${(result.accuracy * 100).toFixed(1)}%`}
-            tone={result.accuracy > 0.7 ? "good" : "default"}
-          />
+          <>
+            <MetricBox
+              label="Test accuracy"
+              value={`${(result.accuracy * 100).toFixed(1)}%`}
+              tone={classificationImproved ? "good" : "default"}
+            />
+            <MetricBox
+              label="Baseline accuracy"
+              value={`${((result.baselineAccuracy ?? 0) * 100).toFixed(1)}%`}
+            />
+          </>
         )}
-        <MetricBox label="Task" value={result.taskType} />
+        <MetricBox label="Complete rows" value={result.completeRowCount.toLocaleString()} />
       </div>
+
+      {result.warnings.length > 0 && (
+        <div className="workspace-chip-row">
+          {result.warnings.map((warning) => (
+            <span key={warning} className="workspace-chip workspace-chip--muted">
+              {warning}
+            </span>
+          ))}
+        </div>
+      )}
 
       {result.featureImportance.length > 0 && (
         <>
@@ -109,9 +143,9 @@ export default function PredictionPanel({ result, dataset }: Props) {
         </>
       )}
 
-      {isRegression && result.predictions.length > 0 && (
+      {isRegression && result.plottedPredictions.length > 0 && (
         <>
-          <h3 className="sub-title">Actual vs predicted</h3>
+          <h3 className="sub-title">Held-out actual vs predicted</h3>
           <ResponsiveContainer width="100%" height={240}>
             <ScatterChart margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" />
@@ -130,12 +164,12 @@ export default function PredictionPanel({ result, dataset }: Props) {
               <ReferenceLine
                 segment={[
                   {
-                    x: Math.min(...result.predictions.map((item) => item.actual)),
-                    y: Math.min(...result.predictions.map((item) => item.actual)),
+                    x: Math.min(...result.plottedPredictions.map((item) => item.actual)),
+                    y: Math.min(...result.plottedPredictions.map((item) => item.actual)),
                   },
                   {
-                    x: Math.max(...result.predictions.map((item) => item.actual)),
-                    y: Math.max(...result.predictions.map((item) => item.actual)),
+                    x: Math.max(...result.plottedPredictions.map((item) => item.actual)),
+                    y: Math.max(...result.plottedPredictions.map((item) => item.actual)),
                   },
                 ]}
                 stroke="var(--muted)"
@@ -148,17 +182,17 @@ export default function PredictionPanel({ result, dataset }: Props) {
                 itemStyle={TOOLTIP_ITEM_STYLE}
                 formatter={(value: number) => [value.toFixed(2)]}
               />
-              <Scatter data={result.predictions} fill="var(--accent)" opacity={0.58} />
+              <Scatter data={result.plottedPredictions} fill="var(--accent)" opacity={0.58} />
             </ScatterChart>
           </ResponsiveContainer>
           <p className="chart-meta">
-            The dashed line marks perfect prediction. Tighter clustering usually
-            means a stronger baseline fit.
+            The dashed line marks perfect prediction on the test split. Tighter
+            clustering means a stronger holdout fit, not just a better in-sample score.
           </p>
         </>
       )}
 
-      <ExportPanel result={result} dataset={dataset} />
+      <ExportPanel result={result} />
     </div>
   );
 }

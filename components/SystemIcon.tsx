@@ -12,7 +12,8 @@ type IconName =
   | "security"
   | "file"
   | "spark"
-  | "chevronDown";
+  | "chevronDown"
+  | "copy";
 
 export default function SystemIcon({
   name,
@@ -113,6 +114,12 @@ export default function SystemIcon({
       {name === "chevronDown" && (
         <>
           <path d="m6 9 6 6 6-6" />
+        </>
+      )}
+      {name === "copy" && (
+        <>
+          <rect x="9" y="9" width="10" height="11" rx="2" />
+          <path d="M7 15H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v1" />
         </>
       )}
     </svg>

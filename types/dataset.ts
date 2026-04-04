@@ -93,21 +93,34 @@ export interface PredictionRow {
   actual: number;
   predicted: number;
   error: number;
+  actualLabel?: string;
+  predictedLabel?: string;
 }
 
 export interface PredictionResult {
   target: string;
   taskType: 'regression' | 'classification';
   modelName: string;
+  baselineModelName: string;
+  evaluationLabel: string;
+  completeRowCount: number;
+  trainRowCount: number;
+  testRowCount: number;
+  warnings: string[];
   /** Regression metrics */
   rmse?: number;
   mae?: number;
   r2?: number;
+  baselineRmse?: number;
+  baselineMae?: number;
+  baselineR2?: number;
   /** Classification metrics */
   accuracy?: number;
+  baselineAccuracy?: number;
   /** Feature importances (correlation-based proxy) */
   featureImportance: { feature: string; importance: number }[];
   predictions: PredictionRow[];
+  plottedPredictions: PredictionRow[];
   summary: string;
 }
 
